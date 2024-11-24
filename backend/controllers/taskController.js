@@ -67,9 +67,9 @@ exports.getTasks = async (req, res) => {
   try {
     const tasks = await Task.find({
       planner: req.params.plannerId,
-      user: req.user.user.id,
+      user: req.user.id,
     });
-    res.status(200).json({ success: true, tasks });
+    res.status(200).json({ success: true, tasks: tasks || [] });
   } catch (error) {
     res.status(500).json({ error: "Error fetching tasks" });
   }

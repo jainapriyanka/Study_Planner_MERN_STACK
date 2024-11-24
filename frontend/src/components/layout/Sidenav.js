@@ -2,7 +2,7 @@
 // import { useState } from "react";
 import { Menu, Button } from "antd";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import logo from "../../assets/images/logo.png";
+import logo from "../../assets/images/favicon.png";
 import { FileTextOutlined, CalendarOutlined, BulbOutlined, FileDoneOutlined, TableOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
 
 function Sidenav({ color }) {

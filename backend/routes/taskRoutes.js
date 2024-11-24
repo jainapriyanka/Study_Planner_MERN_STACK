@@ -13,7 +13,7 @@ const { verifyToken } = require("../middleware/verifyToken");
 // Task Routes
 router.post("/:plannerId/task",verifyToken, fetchUser, addTask);
 router.put("/task/:id",verifyToken, fetchUser, updateTask);
-router.delete("/task/:id",verifyToken, fetchUser, deleteTask);
+router.delete("/deleteTask/:id",verifyToken, fetchUser, deleteTask);
 router.get("/:plannerId/tasks",verifyToken, fetchUser, getTasks);
 
 module.exports = router;

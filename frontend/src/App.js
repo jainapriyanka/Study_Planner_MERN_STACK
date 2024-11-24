@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Tables from "./pages/StudyPlanPage";
-import Billing from "./pages/Billing";
+// import Billing from "./pages/Billing";
 import Rtl from "./pages/Rtl";
 import Profile from "./pages/Profile";
 import Main from "./components/layout/Main";
@@ -15,6 +15,7 @@ import Layout from "./components/landingPage/Layout"
 import Login from "./components/landingPage/Login"
 import Register from "./components/landingPage/Register"
 import ForgotPassword from "./components/landingPage/ForgotPassword"
+import TaskList from "./pages/TaskList";
 
 
 function App() {
@@ -37,7 +38,7 @@ function App() {
                   <Route path="/dashboard" element={<Main><Home /></Main>} />
                   <Route path="/tables" element={<Main><Tables /></Main>} />
                   <Route path="/calendar" element={<Main><Tables /></Main>} />
-                  <Route path="/assignments" element={<Main><Billing /></Main>} />
+                  <Route path="/tasklist/:planId" element={<Main><TaskList /></Main>} />
                   <Route path="/notes" element={<Main><Rtl /></Main>} />
                   <Route path="/progress-tracker" element={<Main><Profile /></Main>} />
                   <Route path="/time-table" element={<Main><Tables /></Main>} />
