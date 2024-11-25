@@ -1,5 +1,5 @@
 const Task = require("../models/taskModel");
-const {sendInAppNotification} =require("../controllers/notificationController")
+const {sendNotifications} =require("../controllers/notificationController")
 
 exports.addTask = async (req, res) => {
   const { title, dueDate } = req.body;
@@ -13,11 +13,17 @@ exports.addTask = async (req, res) => {
     // Create a new task and associate it with the planner and user
     const task = await Task.create({
       planner: req.params.plannerId, // Planner ID from URL params
-      user: req.user.id,         // User ID from JWT
+      user: req.user.id,             // User ID from JWT
       title,
       dueDate,
     });
-    await sendInAppNotification(req.user.id, `New task "${title}" has been added to your planner.`);
+
+    // Pass userId, title, and message correctly as an object
+    await sendNotifications({ 
+      userId: req.user.id, 
+      title: `New task "${title}"`, 
+      message: `A new task "${title}" has been added to your planner.` 
+    });
 
     // Return success with the task details
     res.status(201).json({

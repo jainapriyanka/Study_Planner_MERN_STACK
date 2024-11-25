@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Tables from "./pages/StudyPlanPage";
@@ -5,9 +6,11 @@ import Tables from "./pages/StudyPlanPage";
 import Rtl from "./pages/Rtl";
 import Profile from "./pages/Profile";
 import Main from "./components/layout/Main";
+import UserNotifications from "./pages/UserNotification";
 import "antd/dist/antd.css";
 import "./assets/styles/main.css";
 import "./assets/styles/responsive.css";
+import {subscribeUser} from "./services/PushNotificationService";
 
 // Landing Page
 import LandingPage from "./components/landingPage/LandingPage"
@@ -18,7 +21,12 @@ import ForgotPassword from "./components/landingPage/ForgotPassword"
 import TaskList from "./pages/TaskList";
 
 
+
 function App() {
+  useEffect(() => {
+    // Subscribe the user to push notifications
+    subscribeUser();
+  }, []);
   return (
     <div className="App">
       <BrowserRouter>
@@ -43,6 +51,7 @@ function App() {
                   <Route path="/progress-tracker" element={<Main><Profile /></Main>} />
                   <Route path="/time-table" element={<Main><Tables /></Main>} />
                   <Route path="/profile" element={<Main><Profile /></Main>} />
+                  <Route path="/notifications" element={<Main><UserNotifications /></Main>} />
                   {/* Redirect all unknown routes to /dashboard */}
                   <Route path="*" element={<Navigate to="/dashboard" />} />
                 

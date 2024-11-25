@@ -89,6 +89,7 @@ const Login = () => {
       console.log("Response", response);
       localStorage.setItem('token', response.data.userData.token);
       localStorage.setItem('userName', response.data.userData.name);
+      localStorage.setItem('userId', response.data.userData.id);
       setSuccess('Login successful! Redirecting to dashboard...');
       setError('');
       setTimeout(() => navigate('/dashboard'), 2000);  // Redirect after 2 seconds

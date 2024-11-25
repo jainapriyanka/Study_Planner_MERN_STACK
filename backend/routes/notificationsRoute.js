@@ -1,9 +1,15 @@
-const express = require('express');
-const router = express.Router();
-const { fetchUser } = require('../Middleware/fetchUser');  // To authenticate the user
-const { getNotifications } = require('../controllers/notificationController'); // Import the controller
+const express = require("express");
+const {
+  subscribe,
+  sendNotifications,
+  getUserNotifications,
+} = require("../controllers/notificationController");
 
-// Route to get notifications for the authenticated user
-router.get('/notifications', fetchUser, getNotifications);
+const router = express.Router();
+
+router.post("/notification/subscribe", subscribe); // Save subscription
+router.post("/send", sendNotifications); // Send push notification
+router.get("/user/:userId", getUserNotifications); // Fetch user notifications
 
 module.exports = router;
+ 

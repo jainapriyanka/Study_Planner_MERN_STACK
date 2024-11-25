@@ -1,7 +1,7 @@
 const User=require("../models/userModel")
 
 exports.fetchUser = async (req, res, next) => {
-    console.log("In fetchUser:", req.user); // Debug: Log req.user
+    // console.log("In fetchUser:", req.user); // Debug: Log req.user
     try {
         const user = await User.findById(req.user.id); // Fetch user based on ID
         if (!user) {

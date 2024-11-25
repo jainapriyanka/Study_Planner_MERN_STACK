@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, Form, Input, Button, DatePicker, notification } from 'antd';
 import api from '../services/Api'; // Import api.js
 
-const AddTaskForm = ({ visible, onClose, plan }) => {
+const AddTaskForm = ({ visible, onClose, plan,sendPushNotification }) => {
   const [form] = Form.useForm();
 
   // Handle saving the task
@@ -23,6 +23,14 @@ const AddTaskForm = ({ visible, onClose, plan }) => {
 
       if (!response.data) {
         throw new Error('Failed to create task');
+      }
+
+        // Push Notification
+      if (sendPushNotification) {
+        sendPushNotification({
+          title: 'New Task Added',
+          message: `The task "${taskData.title}" has been added successfully!`
+        });
       }
 
       notification.success({ message: 'Task created successfully!' });

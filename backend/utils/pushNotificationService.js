@@ -5,7 +5,7 @@ const webPush = require('web-push');
 // Setting up VAPID keys
 const vapidKeys = webPush.generateVAPIDKeys();
 webPush.setVapidDetails(
-  'mailto:maulaviazreen@gmail.com',  // Replace with your email address
+  'mailto:youremail@gmail.com',  // Replace with your email address
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );

@@ -62,7 +62,7 @@ exports.deletePlanner = async (req, res) => {
 exports.getPlanners = async (req, res) => {
     try {
         const planners = await Planner.find({ user: req.user.id });
-        console.log("Planners",planners);
+        // console.log("Planners",planners);
         res.status(200).json(planners);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch planners' });

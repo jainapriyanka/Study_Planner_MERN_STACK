@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/Api'; 
 import AddTaskForm from './AddTaskForm'; 
 import StudyPlanForm from './StudyPlanForm'; 
+import { sendPushNotification } from '../services/PushNotificationService';
+
 
 const StudyPlanPage = () => {
   const [studyPlans, setStudyPlans] = useState([]);
@@ -155,6 +157,7 @@ const StudyPlanPage = () => {
         visible={isAddTaskModalVisible}
         onClose={closeModals}
         plan={currentPlanForTask} // Pass the current plan to the AddTaskForm
+        sendPushNotification={sendPushNotification}
       />
     </div>
   );
