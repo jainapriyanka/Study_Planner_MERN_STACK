@@ -1,11 +1,13 @@
 // utils/pushNotificationService.js
 
 const webPush = require('web-push');
+require('dotenv').config();
+
 
 // Setting up VAPID keys
 const vapidKeys = webPush.generateVAPIDKeys();
 webPush.setVapidDetails(
-  'mailto:youremail@gmail.com',  // Replace with your email address
+ `mailto:${process.env.EMAIL_USER}`,  // Replace with your email address
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );

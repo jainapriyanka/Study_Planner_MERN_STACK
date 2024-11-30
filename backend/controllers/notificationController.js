@@ -1,10 +1,12 @@
 const webPush = require("web-push");
 const Notification = require("../models/notificationModel");
 const Subscription = require('../models/subscriptionModel'); 
+require('dotenv').config();
+
 
 // Configure VAPID keys
 webPush.setVapidDetails(
-  "mailto:your email@gmail.com",
+  `mailto:${process.env.EMAIL_USER}`,
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 );

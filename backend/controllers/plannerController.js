@@ -1,3 +1,4 @@
+// Planner Controller
 const Planner = require("../models/plannerModel");
 
 exports.createPlanner = async (req, res) => {

@@ -16,17 +16,35 @@ const StudyPlanPage = () => {
 
   const navigate = useNavigate(); 
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   const fetchPlans = async () => {
+  //     try {
+  //       const response = await api.get('/getAllPlanners');
+  //       setStudyPlans(response.data);
+  //     } catch (error) {
+  //       notification.error({ message: error.message });
+  //     }
+  //   };
+
+  //   fetchPlans();
+  // }, []);
+   // Fetch study plans from the server
+   useEffect(() => {
+    let isMounted = true; // To handle component unmounting
     const fetchPlans = async () => {
       try {
         const response = await api.get('/getAllPlanners');
-        setStudyPlans(response.data);
+        if (isMounted) setStudyPlans(response.data);
       } catch (error) {
         notification.error({ message: error.message });
       }
     };
 
     fetchPlans();
+
+    return () => {
+      isMounted = false; // Cleanup to prevent memory leaks
+    };
   }, []);
 
   const handleDelete = async (id) => {
@@ -49,18 +67,33 @@ const StudyPlanPage = () => {
     setIsAddTaskModalVisible(true);
   };
 
-  const handleStudyPlanSave = () => {
-    const fetchPlans = async () => {
-      try {
-        const response = await api.get('/getAllPlanners');
-        setStudyPlans(response.data);
-      } catch (error) {
-        notification.error({ message: error.message });
+  // const handleStudyPlanSave = () => {
+  //   const fetchPlans = async () => {
+  //     try {
+  //       const response = await api.get('/getAllPlanners');
+  //       setTimeout(() => {
+  //         setStudyPlans(response.data); // Debounce state update
+  //       }, 100);
+  //     } catch (error) {
+  //       notification.error({ message: error.message });
+  //     }
+  //   };
+  //   fetchPlans();
+  // };
+  const handleStudyPlanSave = (updatedPlan) => {
+    // Update the study plan list with the newly added/edited plan
+    setStudyPlans((prevPlans) => {
+      const isExistingPlan = prevPlans.some((plan) => plan._id === updatedPlan._id);
+      if (isExistingPlan) {
+        return prevPlans.map((plan) =>
+          plan._id === updatedPlan._id ? updatedPlan : plan
+        );
       }
-    };
-    fetchPlans();
-  };
+      return [...prevPlans, updatedPlan];
+    });
 
+    setIsStudyPlanModalVisible(false);
+  };
   const handleViewTasks = (planId) => {
     navigate(`/tasklist/${planId}`);
   };
@@ -142,7 +175,7 @@ const StudyPlanPage = () => {
       <Table
         columns={columns}
         dataSource={studyPlans}
-        rowKey="id"
+        rowKey="_id"
         pagination={{ pageSize: 5 }}
         scroll={{ x: 1000 }} 
       />

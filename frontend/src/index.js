@@ -17,5 +17,17 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+const resizeObserverError = () => {
+  const resizeObserverLoopErr = /(ResizeObserver loop limit exceeded)/;
+  window.addEventListener('error', (e) => {
+    if (resizeObserverLoopErr.test(e.message)) {
+      e.stopImmediatePropagation();
+    }
+  });
+};
+
+resizeObserverError();
+
+
 
 ReactDOM.render(<App />, document.getElementById('root'));

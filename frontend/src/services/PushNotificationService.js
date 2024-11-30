@@ -3,8 +3,8 @@
 import api from './Api'; // Adjust the path to your Api.js
 import {getPushKeys,urlBase64ToUint8Array} from '../utils/pushUtils';
 
-const publicKey = 'YOUR_PUBLIC_KEY'; // Replace with your backend's public VAPID key
-
+// const publicKey = 'BD8PjxHMX7yFdtY7GLD8eC_aPxgtddQvU1T3I4jg7X_-Vi_mC9Pkud3ePOJ1-3ITenE9cKOR6Nmyksl_njg3ydY'; // Replace with your backend's public VAPID key
+const publicKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
 async function subscribeUser() {
   if ('serviceWorker' in navigator && 'PushManager' in window) {
     try {
@@ -19,9 +19,16 @@ async function subscribeUser() {
       // Use the getPushKeys utility to generate p256dh and auth
       const { p256dh, auth } = await getPushKeys();  // You have this method in pushUtils.js
 
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        console.error('User ID not found in localStorage.');
+        return;
+      }
+
+
       // Prepare the subscription data for your backend
       const subscriptionData = {
-        userId: 'YOUR_USER_ID', // Replace with actual user ID
+        userId, // Replace with actual user ID
         subscription: {
           endpoint: subscription.endpoint,
           keys: {
@@ -44,6 +51,7 @@ async function subscribeUser() {
 }
 
 async function sendPushNotification(userId, title, message) {
+
   try {
     const payload = {
       userId,         // User ID to whom you want to send the push notification

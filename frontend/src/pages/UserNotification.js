@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const UserNotifications = () => {
+const UserNotifications = ({ setNotificationCount }) => {
   const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState(null);
 
@@ -21,6 +21,7 @@ const UserNotifications = () => {
           `http://localhost:5000/api/user/${userId}`
         );
         setNotifications(response.data);
+        setNotificationCount(response.data.length); 
       } catch (err) {
         console.error("Error fetching notifications:", err);
         setError("Failed to fetch notifications.");
@@ -28,7 +29,7 @@ const UserNotifications = () => {
     };
 
     fetchNotifications();
-  }, []);
+  }, [setNotificationCount]);
 
   return (
     <div>

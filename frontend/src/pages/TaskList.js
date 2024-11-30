@@ -20,8 +20,18 @@ const TaskList = () => {
   const { planId } = useParams();
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [editingTask, setEditingTask] = useState(null);
+  // const [editingTask, setEditingTask] = useState(null);
+  const [editingTask, setEditingTask] = useState({
+    _id:'',
+    title: '',
+    dueDate: '',
+    isCompleted: false,
+    target: 0,
+    progress: 0,
+    week: ''
+  });
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0); 
 
   useEffect(() => {
     if (!planId) {
@@ -33,6 +43,11 @@ const TaskList = () => {
         setIsLoading(true);
         const response = await api.get(`/${planId}/tasks`);
         setTasks(response.data.tasks || []);
+
+        const fetchedTasks = response.data.tasks || [];
+         // Calculate notification count for incomplete tasks
+         const incompleteTasksCount = fetchedTasks.filter(task => !task.isCompleted).length;
+         setNotificationCount(incompleteTasksCount);
       } catch (error) {
         notification.error({ message: 'Error fetching tasks', description: error.message });
       } finally {
@@ -49,6 +64,10 @@ const TaskList = () => {
       if (response.data.success) {
         notification.success({ message: 'Task deleted successfully!' });
         setTasks((prevTasks) => prevTasks.filter((task) => task._id !== taskId));
+
+        // Recalculate notification count after deletion
+        const incompleteTasksCount = tasks.filter(task => !task.isCompleted).length;
+        setNotificationCount(incompleteTasksCount);
       }
     } catch (error) {
       notification.error({ message: 'Error deleting task', description: error.message });
@@ -56,7 +75,16 @@ const TaskList = () => {
   };
 
   const handleEditTask = (task) => {
-    setEditingTask(task);
+    // setEditingTask(task);
+    setEditingTask({
+      _id: task._id,
+      title: task.title,
+      dueDate: moment(task.dueDate).format('YYYY-MM-DD'), // Format date to match input type
+      isCompleted: task.isCompleted,
+      target: task.target,
+      progress: task.progress,
+      week: task.week
+    });
     setIsModalVisible(true);
   };
 
@@ -65,9 +93,31 @@ const TaskList = () => {
     setEditingTask(null);
   };
 
+  // const handleTaskSubmit = async (values) => {
+  //   try {
+  //     const updatedTask = { ...editingTask, ...values };
+  //     const response = await api.put(`/task/${updatedTask._id}`, updatedTask);
+  //     if (response.data.success) {
+  //       notification.success({ message: 'Task updated successfully!' });
+  //       setTasks((prevTasks) =>
+  //         prevTasks.map((task) =>
+  //           task._id === updatedTask._id ? updatedTask : task
+  //         )
+  //       );
+  //       setIsModalVisible(false);
+  //       setEditingTask(null);
+  //        // Recalculate notification count after update
+  //        const incompleteTasksCount = tasks.filter(task => !task.isCompleted).length;
+  //        setNotificationCount(incompleteTasksCount);
+  //     }
+  //   } catch (error) {
+  //     notification.error({ message: 'Error updating task', description: error.message });
+  //   }
+  // };
   const handleTaskSubmit = async (values) => {
     try {
       const updatedTask = { ...editingTask, ...values };
+      console.log("Updated Task",updatedTask);
       const response = await api.put(`/task/${updatedTask._id}`, updatedTask);
       if (response.data.success) {
         notification.success({ message: 'Task updated successfully!' });
@@ -78,12 +128,16 @@ const TaskList = () => {
         );
         setIsModalVisible(false);
         setEditingTask(null);
+  
+        // Recalculate notification count after update
+        const incompleteTasksCount = tasks.filter(task => !task.isCompleted).length;
+        setNotificationCount(incompleteTasksCount);
       }
     } catch (error) {
       notification.error({ message: 'Error updating task', description: error.message });
     }
   };
-
+  
   return (
     <div className="task-list">
       <Title level={3} style={{ textAlign: 'center', color: '#333' }}>
@@ -126,6 +180,17 @@ const TaskList = () => {
                   style={{ color: '#333', fontSize: '16px', whiteSpace: 'normal', wordWrap: 'break-word' }}
                 >
                   {`Due: ${moment(task.dueDate).format('MMM DD, YYYY')}`}
+                </Paragraph>
+                <Paragraph style={{ color: '#333', fontSize: '16px', whiteSpace: 'normal', wordWrap: 'break-word' }}>
+                  {`Target: ${task.target} hrs`}
+                </Paragraph>
+
+                <Paragraph style={{ color: '#333', fontSize: '16px', whiteSpace: 'normal', wordWrap: 'break-word' }}>
+                  {`Progress: ${task.progress} %`}
+                </Paragraph>
+
+                <Paragraph style={{ color: '#333', fontSize: '16px', whiteSpace: 'normal', wordWrap: 'break-word' }}>
+                  {`Week: ${task.week}`}
                 </Paragraph>
 
                 <Paragraph style={{ marginTop: 0, color: task.isCompleted ? '#4CAF50' : '#F44336' }}>
@@ -176,6 +241,17 @@ const TaskList = () => {
 
           <Form.Item name="dueDate" label="Due Date" rules={[{ required: true, message: 'Please select a due date' }]}>
             <Input type="date" />
+          </Form.Item>
+          <Form.Item name="target" label="Target" rules={[{ required: true, message: 'Please enter a target in hours' }]}>
+            <Input type="number" />
+          </Form.Item>
+
+          <Form.Item name="progress" label="Progress in %">
+            <Input type="number" />
+          </Form.Item>
+
+          <Form.Item name="week" label="Week" rules={[{ required: true, message: 'Please select a week' }]}>
+            <Input />
           </Form.Item>
           <Form.Item name="isCompleted" valuePropName="checked">
             <Checkbox>Completed</Checkbox>

@@ -550,7 +550,8 @@
 
 // export default Home;
 
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import api from "../services/Api";
 import {
   Card,
   Col,
@@ -576,25 +577,71 @@ import LineChart from "../components/chart/LineChart";
 
 function Home() {
   const { Title, Text, Paragraph } = Typography;
-  const [tasks, setTasks] = useState([
-    { title: "Math Homework", deadline: "Tomorrow", status: "Pending" },
-    { title: "Science Project", deadline: "In 3 days", status: "In Progress" },
-    { title: "History Notes", deadline: "Today", status: "Completed" },
-  ]);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+// State for modal
+const [isFeedbackModalVisible, setIsFeedbackModalVisible] = useState(false);
+  const [currentWeek, setCurrentWeek] = useState(0);
+  const [weeklyProgress, setWeeklyProgress] = useState(0); // State for weekly progress
 // State for focus timer
 const [focusTime, setFocusTime] = useState(25); // Default 25 minutes
 const handleStartTimer = () => {
   message.success("Focus timer started!");
 };
 
-// State for modal
-const [isFeedbackModalVisible, setIsFeedbackModalVisible] = useState(false);
 
 const handleFeedbackSubmit = () => {
   setIsFeedbackModalVisible(false);
   message.success("Feedback submitted successfully!");
 };
 
+
+
+useEffect(() => {
+  // Fetch current week number
+  const getCurrentWeek = () => {
+    const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+    const days = Math.floor((new Date() - startOfYear) / (24 * 60 * 60 * 1000));
+    const week = Math.ceil((days + 1) / 7);
+    setCurrentWeek(week);
+    console.log("Week",week);
+  };
+
+  getCurrentWeek();
+}, []);
+
+useEffect(() => {
+  // Fetch weekly progress
+  const fetchWeeklyProgress = async () => {
+    try {
+      const userId = localStorage.getItem("userId");
+      // const response = await api.get(`${userId}/weeklyProgress/${currentWeek}`);
+      const response = await api.get(`${userId}/weeklyProgress/48`);
+      setWeeklyProgress(response.data.progress); // Set weekly progress state
+    } catch (error) {
+      message.error("Failed to fetch weekly progress.");
+    }
+  };
+
+  fetchWeeklyProgress();
+}, []);
+
+useEffect(() => {
+  // Fetch upcoming tasks from the API when the component mounts
+  const fetchUpcomingTasks = async () => {
+    try {
+      const userId=localStorage.getItem("userId")
+      const response = await api.get(`${userId}/upcoming/tasks`); // Endpoint for fetching tasks
+      setTasks(response.data.tasks); // Update state with fetched tasks
+    } catch (error) {
+      message.error("Failed to fetch upcoming tasks.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchUpcomingTasks();
+}, []);
  // Pastel Card Styles
  const pastelStyles = {
   white: { backgroundColor: "#fef8e4" }, // Light pastel yellow
@@ -606,13 +653,15 @@ const handleFeedbackSubmit = () => {
   return (
     <div>
       <Row gutter={[16, 16]} style={{ marginBottom: "20px" }}>
-        {/* Weekly Goals */}
-        <Col span={8}>
+         {/* Weekly Goals */}
+         <Col span={8}>
           <Card style={pastelStyles.white}>
             <Title level={5}>Weekly Goals Progress</Title>
-            <Progress type="circle" percent={75} />
+            <Progress type="circle" percent={weeklyProgress} />
             <Paragraph style={{ marginTop: "10px" }}>
-              You're on track! Keep it up!
+              {weeklyProgress >= 75
+                ? "You're on track! Keep it up!"
+                : "Keep going, you can do it!"}
             </Paragraph>
           </Card>
         </Col>
@@ -628,31 +677,37 @@ const handleFeedbackSubmit = () => {
           </Card>
         </Col>
 
-        {/* Upcoming Tasks */}
-<Col span={8}>
-  <Card style={pastelStyles.yellow}>
-    <Title level={5}>Upcoming Tasks</Title>
-    <Timeline>
-      {tasks.map((task, index) => (
-        <Timeline.Item
-          key={index}
-          color={task.status === "Completed" ? "green" : "blue"}
-        >
-          {task.status === "Pending" && (
-            <ClockCircleOutlined style={{ fontSize: '16px', color: '#08c', marginRight: '8px' }} />
-          )}
-          {task.status === "In Progress" && (
-            <ClockCircleOutlined style={{ fontSize: '16px', color: 'orange', marginRight: '8px' }} />
-          )}
-          {task.status === "Completed" && (
-            <CheckCircleOutlined style={{ fontSize: '16px', color: 'green', marginRight: '8px' }} />
-          )}
-          {task.title} - {task.deadline}
-        </Timeline.Item>
-      ))}
-    </Timeline>
-  </Card>
-</Col>
+          {/* Upcoming Tasks */}
+          <Col span={8}>
+          <Card style={pastelStyles.yellow}>
+            <Title level={5}>Upcoming Tasks</Title>
+            <Timeline>
+              {loading ? (
+                <Timeline.Item>Loading...</Timeline.Item>
+              ) : tasks.length === 0 ? (
+                <Timeline.Item>No upcoming tasks</Timeline.Item>
+              ) : (
+                tasks.map((task, index) => (
+                  <Timeline.Item
+                    key={index}
+                    color={task.isCompleted === true ? "green" : "blue"}
+                  >
+                    {task.isCompleted === false && (
+                      <ClockCircleOutlined style={{ fontSize: '16px', color: '#08c', marginRight: '8px' }} />
+                    )}
+                    {task.isCompleted === false && (
+                      <ClockCircleOutlined style={{ fontSize: '16px', color: 'orange', marginRight: '8px' }} />
+                    )}
+                    {task.isCompleted === true && (
+                      <CheckCircleOutlined style={{ fontSize: '16px', color: 'green', marginRight: '8px' }} />
+                    )}
+                    {task.title} - {new Date(task.dueDate).toLocaleDateString()}
+                  </Timeline.Item>
+                ))
+              )}
+            </Timeline>
+          </Card>
+        </Col>
 
   {/* Today's Study Plan */}
   <Col span={8}>
@@ -662,10 +717,10 @@ const handleFeedbackSubmit = () => {
               dataSource={tasks}
               renderItem={(task) => (
                 <List.Item>
-                  <Text>{task.title} - {task.deadline}</Text>
+                  <Text>{task.title} - {task.dueDate}</Text>
                   <Progress
-                    percent={task.status === "Completed" ? 100 : 50}
-                    status={task.status === "Completed" ? "success" : "active"}
+                    percent={task.isCompleted === true ? 100 : 50}
+                    status={task.isCompleted === true ? "success" : "active"}
                   />
                 </List.Item>
               )}
@@ -758,4 +813,3 @@ const handleFeedbackSubmit = () => {
 }
 
 export default Home;
-
