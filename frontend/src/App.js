@@ -37,6 +37,7 @@ function App() {
 
           {/* Protected Routes */}
           <Route path="/" element={<Layout><LandingPage /></Layout>} />
+          {/* <Route path="/" element={<LandingPage />} /> */}
           <Route path="/login" element={<Layout><Login /></Layout>} />
           <Route path="/register" element={<Layout><Register /></Layout>} />
           <Route path="/forgot-pass" element={<Layout><ForgotPassword /></Layout>} />
