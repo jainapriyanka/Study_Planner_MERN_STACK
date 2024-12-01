@@ -187,14 +187,44 @@ exports.updateProgressOnCompletion = async (req, res) => {
 };
 
 
+// exports.getWeeklyProgress = async (req, res) => {
+//   const { userId, week } = req.params; // Extract userId and week from the URL params
+
+//   try {
+//     // Find all tasks for the user in the specified week
+//     const tasks = await Task.find({ user: userId, week: week });
+//     // console.log("Week",week);
+//     // console.log("Tasks of this week",tasks);
+
+//     if (tasks.length === 0) {
+//       return res.status(404).json({ error: "No tasks found for this week" });
+//     }
+
+//     // Calculate the total target and total progress
+//     const totalTarget = tasks.reduce((acc, task) => acc + task.target, 0);
+//     console.log("Total Target",totalTarget);
+//     const totalProgress = tasks.reduce((acc, task) => acc + task.progress, 0);
+//     console.log("Total Progress",totalProgress);
+
+//     // Calculate the progress percentage
+//     const progress = (totalProgress / totalTarget) * 100;
+
+//     // Return the progress in the response
+//     res.status(200).json({
+//       success: true,
+//       progress: progress.toFixed(2), // Return progress as a percentage
+//     });
+//   } catch (error) {
+//     console.error("Error fetching weekly progress:", error);
+//     res.status(500).json({ error: "Error fetching weekly progress", details: error.message });
+//   }
+// };
 exports.getWeeklyProgress = async (req, res) => {
   const { userId, week } = req.params; // Extract userId and week from the URL params
 
   try {
     // Find all tasks for the user in the specified week
     const tasks = await Task.find({ user: userId, week: week });
-    console.log("Week",week);
-    console.log("Tasks of this week",tasks);
 
     if (tasks.length === 0) {
       return res.status(404).json({ error: "No tasks found for this week" });
@@ -202,18 +232,26 @@ exports.getWeeklyProgress = async (req, res) => {
 
     // Calculate the total target and total progress
     const totalTarget = tasks.reduce((acc, task) => acc + task.target, 0);
+    // console.log("Total Target",totalTarget);
     const totalProgress = tasks.reduce((acc, task) => acc + task.progress, 0);
+    // console.log("Total progress",totalProgress);
 
-    // Calculate the progress percentage
-    const progress = (totalProgress / totalTarget) * 100;
+    // Handle case where totalTarget is zero to avoid division by zero
+    let progress = 0;
+    if (totalTarget > 0) {
+      progress = (totalProgress / totalTarget) * 100;
+    //   console.log("Calculation",totalProgress/totalTarget);
+    //   console.log("Progress",progress);
+    }
 
     // Return the progress in the response
     res.status(200).json({
       success: true,
-      progress: progress.toFixed(2), // Return progress as a percentage
+      progress: progress.toFixed(1), // Return progress as a percentage
     });
   } catch (error) {
     console.error("Error fetching weekly progress:", error);
     res.status(500).json({ error: "Error fetching weekly progress", details: error.message });
   }
 };
+
