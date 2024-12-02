@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col,Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
+import ReCAPTCHA from 'react-google-recaptcha'; // Import reCAPTCHA
 import api from '../../services/Api';  // Axios instance
-import "../../assets/styles/LandingPage.css";
+import "./LandingPage.css";
 
 const Register = () => {
-  const [name, setName] = useState('');  // Added name field
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [captchaToken, setCaptchaToken] = useState('');
   const navigate = useNavigate();
+
+  const handleCaptchaChange = (token) => {
+    console.log("Captcha token:", token);
+    setCaptchaToken(token);  
+
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,10 +27,13 @@ const Register = () => {
       setError('Passwords do not match');
       return;
     }
+    if (!captchaToken) {
+      setError('Please verify that you are not a robot');
+      return;
+    }
 
     try {
-      // Pass name along with email and password to backend
-      const response = await api.post('/auth/register', { name, email, password });
+      const response = await api.post('/auth/register', { name, email, password,captchaToken });
       setSuccess('Registration successful! Redirecting to login page...');
       setError('');
       setTimeout(() => navigate('/login'), 2000);
@@ -32,67 +42,81 @@ const Register = () => {
       setSuccess('');
     }
   };
+  console.log("Recaptcha site key:", process.env.REACT_APP_RECAPTCHA_SITE_KEY); 
 
   return (
-    <Container className="my-5">
-      <Row>
-        <Col md={6} className="mx-auto">
-          <h2>Register</h2>
-          {error && <div className="alert alert-danger">{error}</div>}
-          {success && <Alert variant="success">{success}</Alert>}
-          <Form onSubmit={handleSubmit}>
-            <Form.Group controlId="formName">
-              <Form.Label>Name</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </Form.Group>
+    <div className="custom-register-container">
+      <div className="custom-register-box">
+        <h2>Register</h2>
+        {error && <div className="custom-alert custom-alert-danger">{error}</div>}
+        {success && <div className="custom-alert custom-alert-success">{success}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className="custom-form-group">
+            <label htmlFor="name">Name</label>
+            <input
+              type="text"
+              id="name"
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
 
-            <Form.Group controlId="formEmail">
-              <Form.Label>Email address</Form.Label>
-              <Form.Control
-                type="email"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </Form.Group>
+          <div className="custom-form-group">
+            <label htmlFor="email">Email address</label>
+            <input
+              type="email"
+              id="email"
+              placeholder="Enter email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-            <Form.Group controlId="formPassword">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </Form.Group>
+          <div className="custom-form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-            <Form.Group controlId="formConfirmPassword">
-              <Form.Label>Confirm Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Confirm password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </Form.Group>
+          <div className="custom-form-group">
+            <label htmlFor="confirm-password">Confirm Password</label>
+            <input
+              type="password"
+              id="confirm-password"
+              placeholder="Confirm password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
+            {/* Add reCAPTCHA */}
+          <div className="custom-form-group">
+            <ReCAPTCHA
+              sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}  
+              
+              // sitekey="6LcW2o8qAAAAAJEie5q8jb6jJG1V9Y4HkSnLum0w" 
+              onChange={handleCaptchaChange}
+            />
+          </div>
 
-            <Button type="submit" style={{ background: "#ff6b6b", border: "none", marginTop: "10px" }}>
-              Register
-            </Button>
-          </Form>
-          <Link to="/login">Already have an account? Login here</Link>
-        </Col>
-      </Row>
-    </Container>
+          <button type="submit" className="custom-btn">
+            Register
+          </button>
+        </form>
+        <Link to="/login" className="custom-login-link">
+          Already have an account? Login here
+        </Link>
+      </div>
+    </div>
   );
 };
 
