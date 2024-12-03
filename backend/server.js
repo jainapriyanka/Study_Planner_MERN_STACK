@@ -7,6 +7,7 @@ const userRoutes = require("./routes/userRoutes");
 const plannerRoutes = require("./routes/plannerRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const notificationRoutes = require("./routes/notificationsRoute");
+const progressRoute = require("./routes/progressRoute");
 
 //config dot env
 dotenv.config();
@@ -15,7 +16,7 @@ dotenv.config();
 const app = express();
 app.use(cors());
 
-
+ 
 
 //port
 const PORT = 5000 || process.env.PORT;
@@ -35,6 +36,7 @@ app.use("/api/auth", userRoutes);
 app.use("/api", plannerRoutes);
 app.use("/api", taskRoutes);
 app.use("/api", notificationRoutes);
+app.use("/api", progressRoute);
 // app.use("/uploads", express.static("uploads"));
 
 
