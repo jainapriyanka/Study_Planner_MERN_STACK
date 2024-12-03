@@ -23,64 +23,10 @@ exports.getSubscriptions = async (req, res) => {
     }
 };
 
-// Save subscription
-// exports.subscribe = async (req, res) => {
-//   try {
-//     const { userId, subscription } = req.body;
-
-//     // Save subscription to the database
-//     const newSubscription = new Subscription({
-//       user: userId,
-//       subscription,
-//     });
-//     await newSubscription.save();
-
-//     res.status(201).json({ message: "Subscription saved successfully!" });
-//   } catch (error) {
-//     console.error("Subscription failed:", error);
-//     res.status(500).json({ error: "Failed to save subscription" });
-//   }
-// };
-// exports.subscribe = async (req, res) => {
-//   try {
-//     const { userId, subscription } = req.body;
-//     // Debugging: Check request body structure
-//     console.log("Received subscription:", req.body);
-
-//     // Validate the subscription structure
-//     if (
-//       !subscription ||
-//       !subscription.endpoint ||
-//       !subscription.keys ||
-//       !subscription.keys.p256dh ||
-//       !subscription.keys.auth
-//     ) {
-//       return res.status(400).json({ error: "Invalid subscription data" });
-//     }
-
-//     // Save subscription to the database
-//     const newSubscription = new Subscription({
-//       user: userId,
-//       subscription: {
-//         endpoint: subscription.endpoint,
-//         keys: {
-//           p256dh: subscription.keys.p256dh,
-//           auth: subscription.keys.auth,
-//         },
-//       },
-//     });
-//     await newSubscription.save();
-
-//     res.status(201).json({ message: "Subscription saved successfully!" });
-//   } catch (error) {
-//     console.error("Subscription failed:", error);
-//     res.status(500).json({ error: "Failed to save subscription" });
-//   }
-// };
 // Utility function to convert array of integers or ArrayBuffer to base64 string
 const arrayToBase64 = (array) => {
-  console.log("Array passed to arrayToBase64", array);
-  console.log("Array Length", array.length);
+  // console.log("Array passed to arrayToBase64", array);
+  // console.log("Array Length", array.length);
 
   // If the input is an ArrayBuffer (or a string), convert accordingly
   if (array instanceof ArrayBuffer) {
@@ -100,7 +46,7 @@ const arrayToBase64 = (array) => {
 exports.subscribe = async (req, res) => {
   try {
     const { userId, subscription } = req.body;
-    console.log("Subscription from req.body", subscription.keys);
+    // console.log("Subscription from req.body", subscription.keys);
 
     if (!subscription || !subscription.keys || !subscription.keys.p256dh || !subscription.keys.auth) {
       return res.status(400).json({ error: "Invalid subscription data" });
@@ -123,7 +69,7 @@ exports.subscribe = async (req, res) => {
         auth,
       },
     };
-    console.log("Formatted subscription", formattedSubscription);
+    // console.log("Formatted subscription", formattedSubscription);
 
     // Save the subscription to the database
     const newSubscription = new Subscription({
@@ -139,40 +85,13 @@ exports.subscribe = async (req, res) => {
   }
 };
 
-
-
-// // Send notifications   
-// exports.sendNotifications = async (req, res) => {
-//   try {
-//     const subscriptions = await Subscription.find(); // Fetch all subscriptions
-//     console.log("All Subscriptions",subscriptions);
-
-//     subscriptions.forEach((subscription) => {
-//       const payload = JSON.stringify({
-//         title: 'New Task',    
-//         message: 'You have a new task assigned!',
-//       });
-
-//       webPush.sendNotification(subscriptions, payload).catch((error) => {
-//         console.error('Error sending notification:', error);
-//       });
-//     });
- 
-//     res.send('Notifications sent');
-//   } catch (error) { 
-//     console.error('Error fetching subscriptions:', error);
-//     res.status(500).send('Failed to send notifications');
-//   }
-// }; 
-
-
 exports.sendNotifications = async ({ userId, title, message }) => {
   try {
     // Fetch the subscription for the given user
     const subscriptions = await Subscription.find({ user: userId });
 
     // Log all subscriptions for debugging
-    console.log("All Subscriptions", subscriptions);
+    // console.log("All Subscriptions", subscriptions);
      // Create and save notification in the database
      const notification = new Notification({
       user: userId,
@@ -237,3 +156,14 @@ exports.getUserNotifications = async (req, res) => {
   }
 };
 
+exports.markAllAsRead = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    await Notification.updateMany({ user: userId, isRead: false }, { isRead: true });
+    const unreadCount = await Notification.countDocuments({ user: userId, isRead: false }); // Should return 0
+    res.status(200).json({ message: "All notifications marked as read.", unreadCount });
+  } catch (error) {
+    console.error("Error marking notifications as read:", error);
+    res.status(500).json({ message: "Failed to mark notifications as read." });
+  }
+};

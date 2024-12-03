@@ -53,13 +53,12 @@
   function Header({subName,onPress  }) {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [notificationCount, setNotificationCount] = useState(0);
-    const [lastViewed, setLastViewed] = useState(null);
+      
   
 
     // Open Drawer
     const showDrawer = () => {
       setIsDrawerOpen(true);
-      setLastViewed(Date.now()); 
     };
 
     // Close Drawer
@@ -110,7 +109,7 @@
           open={isDrawerOpen}
           width={400}
         >
-          <UserNotifications setNotificationCount={setNotificationCount} lastViewed={lastViewed} />
+          <UserNotifications setNotificationCount={setNotificationCount}  />
         </Drawer>
             <Button
               type="link"
