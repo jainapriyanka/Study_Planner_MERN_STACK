@@ -130,7 +130,16 @@ exports.getTasks = async (req, res) => {
     res.status(500).json({ error: "Error fetching tasks" });
   }
 };
-
+// Controller to fetch all tasks
+exports.getAllTasks = async (req, res) => {
+  try {
+    const tasks = await Task.find(); // Fetch all tasks from the database
+    return res.status(200).json(tasks); // Respond with the tasks
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    return res.status(500).json({ message: 'Server Error' });
+  }
+};
 
 
 

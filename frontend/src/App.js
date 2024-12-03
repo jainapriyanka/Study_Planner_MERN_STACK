@@ -8,7 +8,7 @@ import Profile from "./pages/Profile";
 import Main from "./components/layout/Main";
 import UserNotifications from "./pages/UserNotification";
 import ProgressTracker from "./pages/ProgressTracker";
-import Calendar from "./pages/Calendar";
+import CalendarSection from "./pages/CalendarSection";
 import "antd/dist/antd.css";
 // import 'antd/dist/reset.css'; // Use this for Ant Design v5+
 
@@ -52,7 +52,7 @@ function App() {
                 
                   <Route path="/dashboard" element={<Main><Home /></Main>} />
                   <Route path="/tables" element={<Main><Tables /></Main>} />
-                  <Route path="/calendar" element={<Main><Calendar /></Main>} />
+                  <Route path="/calendar" element={<Main><CalendarSection /></Main>} />
                   <Route path="/tasklist/:planId" element={<Main><TaskList /></Main>} />
                   <Route path="/notes" element={<Main><Rtl /></Main>} />
                   <Route path="/progress-tracker" element={<Main><ProgressTracker /></Main>} />
