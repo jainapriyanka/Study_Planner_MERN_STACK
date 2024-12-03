@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from 'antd';
-import '../../assets/styles/LandingPage.css';
+import './LandingPage.css';
 import img from '../../assets/images/watch1.png';
 
 

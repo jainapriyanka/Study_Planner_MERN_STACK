@@ -38,7 +38,7 @@
 import React from 'react';
 import { Row, Col, Button, Typography, Space } from 'antd';
 import { useSpring, animated } from 'react-spring';
-import '../../assets/styles/LandingPage.css'; 
+import './LandingPage.css'; 
 import { FaBullseye, FaEye, FaHeart } from "react-icons/fa";
 
 import HeroSection from './HeroSection';
@@ -76,21 +76,21 @@ const LandingPage = () => {
       </p>
       <div className="about-features">
         <div className="feature">
-          <div className="icon">
+          <div className="icon-1">
             <FaBullseye />
           </div>
           <h3>Our Mission</h3>
           <p>Empowering individuals and organizations through cutting-edge technology and unparalleled support.</p>
         </div>
         <div className="feature">
-          <div className="icon">
+          <div className="icon-1">
             <FaEye />
           </div>
           <h3>Our Vision</h3>
           <p>To be the leader in providing innovative, user-focused solutions that inspire and transform.</p>
         </div>
         <div className="feature">
-          <div className="icon">
+          <div className="icon-1">
             <FaHeart />
           </div>
           <h3>Our Values</h3>

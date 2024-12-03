@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../../assets/styles/LandingPage.css';
+import './LandingPage.css';
 import { Link } from 'react-router-dom';
 
 const NavbarComponent = () => {
@@ -11,14 +11,14 @@ const NavbarComponent = () => {
 
   return (
     <div className="navbar">
-      <div className="brand">
+      <div className="brand-1">
         <button className="toggle-btn" onClick={toggleMenu}>
           ☰
         </button>
-        <span>StudyPlanner</span>
+        <span>StudyMaster</span>
       </div>
-      <div className={`menu ${isMenuOpen ? 'open' : ''}`}>
-        <a href="#home">Home</a>
+      <div className={`menu-1 ${isMenuOpen ? 'open' : ''}`}>
+        <a href="/">Home</a>
         <a href="#about">About</a>
         <a href="#feature">Feature</a>
         <a href="#pricing">Pricing</a>
