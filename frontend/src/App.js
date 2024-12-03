@@ -7,7 +7,11 @@ import Rtl from "./pages/Rtl";
 import Profile from "./pages/Profile";
 import Main from "./components/layout/Main";
 import UserNotifications from "./pages/UserNotification";
+import ProgressTracker from "./pages/ProgressTracker";
+import Calendar from "./pages/Calendar";
 import "antd/dist/antd.css";
+// import 'antd/dist/reset.css'; // Use this for Ant Design v5+
+
 import "./assets/styles/main.css";
 import "./assets/styles/responsive.css";
 import {subscribeUser} from "./services/PushNotificationService";
@@ -19,6 +23,8 @@ import Login from "./components/landingPage/Login"
 import Register from "./components/landingPage/Register"
 import ForgotPassword from "./components/landingPage/ForgotPassword"
 import TaskList from "./pages/TaskList";
+
+
 
 
 
@@ -46,10 +52,10 @@ function App() {
                 
                   <Route path="/dashboard" element={<Main><Home /></Main>} />
                   <Route path="/tables" element={<Main><Tables /></Main>} />
-                  <Route path="/calendar" element={<Main><Tables /></Main>} />
+                  <Route path="/calendar" element={<Main><Calendar /></Main>} />
                   <Route path="/tasklist/:planId" element={<Main><TaskList /></Main>} />
                   <Route path="/notes" element={<Main><Rtl /></Main>} />
-                  <Route path="/progress-tracker" element={<Main><Profile /></Main>} />
+                  <Route path="/progress-tracker" element={<Main><ProgressTracker /></Main>} />
                   <Route path="/time-table" element={<Main><Tables /></Main>} />
                   <Route path="/profile" element={<Main><Profile /></Main>} />
                   <Route path="/notifications" element={<Main><UserNotifications /></Main>} />

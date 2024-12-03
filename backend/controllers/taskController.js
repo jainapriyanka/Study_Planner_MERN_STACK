@@ -1,5 +1,6 @@
 // Task Controller
 const Task = require("../models/taskModel");
+const moment = require("moment");
 const {sendNotifications} =require("../controllers/notificationController")
 
 exports.addTask = async (req, res) => {
@@ -39,20 +40,46 @@ exports.addTask = async (req, res) => {
   }
 };
 
-
+// Helper function to calculate progress
+const calculateProgress = (target, completed) => {
+  if (target > 0) {
+    return Math.min((completed / target) * 100, 100).toFixed(2);
+  }
+  return 0;  // If no target, progress is 0%
+};
 exports.updateTask = async (req, res) => {
-  const { title, dueDate, isCompleted,target,progress,week } = req.body;
+  const { title, dueDate,target,completedHours,week } = req.body;
   console.log("TaskId",req.params.id)
   try {
+    // Calculate the progress based on target and completed hours
+    const progress = calculateProgress(target, completedHours);
+     // Check if the progress is 100%, and set isCompleted to true
+     const updatedIsCompleted = progress == 100 ? true : false;
+
+    // Find and update the task by ID
     const task = await Task.findByIdAndUpdate(
       req.params.id,
-      { title, dueDate, isCompleted ,target,progress,week },
-      { new: true } 
+      { 
+        title, 
+        dueDate, 
+        isCompleted: updatedIsCompleted,
+        target, 
+        completedHours, 
+        week, 
+        progress  // Add calculated progress here
+      },
+      { new: true }  // Return the updated task
     );
-    if (!task) return res.status(404).json({ error: "Task not found" });
+
+    // Check if task was found and updated
+    if (!task) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    // Return the updated task in the response
     res.status(200).json({ success: true, task });
   } catch (error) {
-    // Log the error to see more details
+    // Log the error for debugging
     console.error("Error updating task:", error);
 
     // Send an error response with the error message
@@ -76,28 +103,92 @@ exports.getTasks = async (req, res) => {
       planner: req.params.plannerId,
       user: req.user.id,
     });
-    res.status(200).json({ success: true, tasks: tasks || [] });
+
+    for (let task of tasks) {
+      // Check if the week is not set or is 0
+      if (task.week === 0 || !task.week) {
+        // Calculate the current week of the month based on the due date
+        if (task.dueDate) {
+          const currentWeekOfMonth = Math.ceil(moment(task.dueDate).date() / 7);
+
+          // Update the week in the database
+          await Task.findByIdAndUpdate(task._id, { week: currentWeekOfMonth });
+        }
+      }
+    }
+
+    // Fetch all tasks again after the update
+    const updatedTasks = await Task.find({
+      planner: req.params.plannerId,
+      user: req.user.id,
+    });
+
+    // Return the tasks with updated week
+    res.status(200).json({ success: true, tasks: updatedTasks });
   } catch (error) {
+    console.error(error); // Log error for debugging
     res.status(500).json({ error: "Error fetching tasks" });
   }
 };
 
 
 
-// Function to fetch top 3 upcoming tasks sorted by due date for a specific user
-exports.getUpcomingTasks = async (req, res) => {
-  const { userId } = req.params; // Extract userId from the URL parameters
 
+// Function to fetch top 3 upcoming tasks sorted by due date for a specific user
+// exports.getUpcomingTasks = async (req, res) => {
+//   const { userId } = req.params; 
+//   console.log("UserId",userId);
+//   try {
+//     // Fetch the top 3 upcoming tasks for the specified userId
+//     const upcomingTasks = await Task.find({
+//       user: userId,
+//       dueDate: { $gte: new Date() },
+//     })
+//       .sort({ dueDate: 1 }) // Sort by due date (ascending)
+//       .limit(3); // Limit to top 3 tasks
+
+//     console.log("Upcoming Tasks for User ID:", userId, upcomingTasks);
+
+//     if (!upcomingTasks || upcomingTasks.length === 0) {
+//       console.error("No upcoming tasks found for user:", userId);
+//       return res.status(404).json({
+//         success: false,
+//         error: `No upcoming tasks found for user ${userId}`,
+//       });
+//     }
+
+//     // Return the upcoming tasks for the specific user
+//     res.status(200).json({
+//       success: true,
+//       tasks: upcomingTasks,
+//     });
+//   } catch (error) {
+//     // Log the error details to understand the source of the failure
+//     console.error("Error fetching upcoming tasks:", error);
+
+//     // Detailed error message with stack trace
+//     res.status(500).json({
+//       success: false,
+//       error: "Error fetching upcoming tasks.",
+//       details: error.message, // Provide the specific error message
+//       stack: error.stack, // Include the stack trace for debugging
+//     });
+//   }
+// };
+
+exports.getUpcomingTasks = async (req, res) => {
+  const { userId } = req.params; 
+  console.log("UserId", userId);
   try {
     // Fetch the top 3 upcoming tasks for the specified userId
     const upcomingTasks = await Task.find({
-      userId: userId, // Ensure tasks belong to the specified userId
-      dueDate: { $gte: new Date() }, // Ensure only future tasks are included
+      user: userId, // Change 'userId' to 'user'
+      dueDate: { $gte: new Date() },
     })
       .sort({ dueDate: 1 }) // Sort by due date (ascending)
       .limit(3); // Limit to top 3 tasks
 
-    console.log("Upcoming Tasks for User ID:", userId, upcomingTasks);
+    // console.log("Upcoming Tasks for User ID:", userId, upcomingTasks);
 
     if (!upcomingTasks || upcomingTasks.length === 0) {
       console.error("No upcoming tasks found for user:", userId);
@@ -125,66 +216,11 @@ exports.getUpcomingTasks = async (req, res) => {
     });
   }
 };
-// Calculate overall progress for a user
-exports.getUserProgress = async (req, res) => {
-  const { userId, plannerId } = req.params; // Extract userId and plannerId from the URL parameters
 
-  try {
-    // Fetch all tasks for the user under the specific planner
-    const tasks = await Task.find({ planner: plannerId, user: userId });
 
-    if (tasks.length === 0) {
-      return res.status(404).json({ error: "No tasks found for the user" });
-    }
 
-    // Calculate the number of completed tasks and total tasks
-    const completedTasks = tasks.filter(task => task.isCompleted).length;
-    const totalTasks = tasks.length;
 
-    // Calculate progress percentage
-    const progress = (completedTasks / totalTasks) * 100;
 
-    // Return the progress of the user
-    res.status(200).json({
-      success: true,
-      progress: progress.toFixed(2), // Return progress as a percentage (two decimal points)
-    });
-  } catch (error) {
-    console.error("Error fetching user progress:", error);
-    res.status(500).json({ error: "Error fetching user progress", details: error.message });
-  }
-};
-
-// Update progress based on task completion
-exports.updateProgressOnCompletion = async (req, res) => {
-  const { taskId } = req.params;
-
-  try {
-    // Find the task and update its completion status
-    const task = await Task.findById(taskId);
-    if (!task) return res.status(404).json({ error: "Task not found" });
-
-    task.isCompleted = true; // Mark the task as completed
-    await task.save(); // Save the task
-
-    // Recalculate the user's progress after the update
-    const tasks = await Task.find({ planner: task.planner, user: task.user });
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.isCompleted).length;
-
-    const updatedProgress = (completedTasks / totalTasks) * 100;
-
-    // Return the updated progress
-    res.status(200).json({
-      success: true,
-      message: "Task marked as completed",
-      updatedProgress: updatedProgress.toFixed(2),
-    });
-  } catch (error) {
-    console.error("Error updating progress:", error);
-    res.status(500).json({ error: "Error updating progress", details: error.message });
-  }
-};
 
 
 // exports.getWeeklyProgress = async (req, res) => {
@@ -193,8 +229,6 @@ exports.updateProgressOnCompletion = async (req, res) => {
 //   try {
 //     // Find all tasks for the user in the specified week
 //     const tasks = await Task.find({ user: userId, week: week });
-//     // console.log("Week",week);
-//     // console.log("Tasks of this week",tasks);
 
 //     if (tasks.length === 0) {
 //       return res.status(404).json({ error: "No tasks found for this week" });
@@ -202,56 +236,28 @@ exports.updateProgressOnCompletion = async (req, res) => {
 
 //     // Calculate the total target and total progress
 //     const totalTarget = tasks.reduce((acc, task) => acc + task.target, 0);
-//     console.log("Total Target",totalTarget);
+//     // console.log("Total Target",totalTarget);
 //     const totalProgress = tasks.reduce((acc, task) => acc + task.progress, 0);
-//     console.log("Total Progress",totalProgress);
+//     // console.log("Total progress",totalProgress);
 
-//     // Calculate the progress percentage
-//     const progress = (totalProgress / totalTarget) * 100;
+//     // Handle case where totalTarget is zero to avoid division by zero
+//     let progress = 0;
+//     if (totalTarget > 0) {
+//       progress = (totalProgress / totalTarget) * 100;
+//     //   console.log("Calculation",totalProgress/totalTarget);
+//     //   console.log("Progress",progress);
+//     }
 
 //     // Return the progress in the response
 //     res.status(200).json({
 //       success: true,
-//       progress: progress.toFixed(2), // Return progress as a percentage
+//       progress: progress.toFixed(1), // Return progress as a percentage
 //     });
 //   } catch (error) {
 //     console.error("Error fetching weekly progress:", error);
 //     res.status(500).json({ error: "Error fetching weekly progress", details: error.message });
 //   }
 // };
-exports.getWeeklyProgress = async (req, res) => {
-  const { userId, week } = req.params; // Extract userId and week from the URL params
 
-  try {
-    // Find all tasks for the user in the specified week
-    const tasks = await Task.find({ user: userId, week: week });
 
-    if (tasks.length === 0) {
-      return res.status(404).json({ error: "No tasks found for this week" });
-    }
-
-    // Calculate the total target and total progress
-    const totalTarget = tasks.reduce((acc, task) => acc + task.target, 0);
-    // console.log("Total Target",totalTarget);
-    const totalProgress = tasks.reduce((acc, task) => acc + task.progress, 0);
-    // console.log("Total progress",totalProgress);
-
-    // Handle case where totalTarget is zero to avoid division by zero
-    let progress = 0;
-    if (totalTarget > 0) {
-      progress = (totalProgress / totalTarget) * 100;
-    //   console.log("Calculation",totalProgress/totalTarget);
-    //   console.log("Progress",progress);
-    }
-
-    // Return the progress in the response
-    res.status(200).json({
-      success: true,
-      progress: progress.toFixed(1), // Return progress as a percentage
-    });
-  } catch (error) {
-    console.error("Error fetching weekly progress:", error);
-    res.status(500).json({ error: "Error fetching weekly progress", details: error.message });
-  }
-};
 

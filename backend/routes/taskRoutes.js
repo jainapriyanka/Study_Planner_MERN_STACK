@@ -7,9 +7,6 @@ const {
   deleteTask,
   getTasks,
   getUpcomingTasks,
-  getUserProgress,
-   updateProgressOnCompletion,
-   getWeeklyProgress
 } = require("../controllers/taskController");
 const { verifyToken } = require("../middleware/verifyToken");
 
@@ -20,8 +17,4 @@ router.put("/task/:id",verifyToken, fetchUser, updateTask);
 router.delete("/deleteTask/:id",verifyToken, fetchUser, deleteTask);
 router.get("/:plannerId/tasks",verifyToken, fetchUser, getTasks);
 router.get("/:userId/upcoming/tasks",verifyToken,fetchUser,getUpcomingTasks);
-router.get("/:userId/:plannerId/progress",verifyToken,fetchUser, getUserProgress);
-router.put("/:taskId/complete",verifyToken,fetchUser, updateProgressOnCompletion);
-router.get("/:userId/weeklyProgress/:week",verifyToken,fetchUser, getWeeklyProgress);
-
 module.exports = router;
