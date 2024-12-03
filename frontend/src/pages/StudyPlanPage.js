@@ -63,6 +63,11 @@ const StudyPlanPage = () => {
   };
 
   const openAddTaskForm = (plan) => {
+    console.log('Selected plan for adding task:', plan);
+    if (!plan || !plan._id) {
+      notification.error({ message: 'Invalid plan selected' });
+      return;
+    }
     setCurrentPlanForTask(plan); 
     setIsAddTaskModalVisible(true);
   };

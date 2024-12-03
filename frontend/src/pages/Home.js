@@ -557,14 +557,14 @@ import {
   Col,
   Row,
   Typography,
-  Tooltip,
+  // Tooltip,
   Progress,
   Upload,
   message,
   Button,
   Timeline,
   List,
-  Radio,
+  // Radio,
 } from "antd";
 import {
   ClockCircleOutlined,
@@ -580,51 +580,54 @@ function Home() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 // State for modal
-const [isFeedbackModalVisible, setIsFeedbackModalVisible] = useState(false);
+// const [isFeedbackModalVisible, setIsFeedbackModalVisible] = useState(false);
   const [currentWeek, setCurrentWeek] = useState(0);
   const [weeklyProgress, setWeeklyProgress] = useState(0); // State for weekly progress
 // State for focus timer
-const [focusTime, setFocusTime] = useState(25); // Default 25 minutes
-const handleStartTimer = () => {
-  message.success("Focus timer started!");
-};
+// const [focusTime, setFocusTime] = useState(25); // Default 25 minutes
 
 
-const handleFeedbackSubmit = () => {
-  setIsFeedbackModalVisible(false);
-  message.success("Feedback submitted successfully!");
-};
+// const handleStartTimer = () => {
+//   message.success("Focus timer started!");
+// };
+
+
+// const handleFeedbackSubmit = () => {
+//   setIsFeedbackModalVisible(false);
+//   message.success("Feedback submitted successfully!");
+// };
 
 
 
 useEffect(() => {
-  // Fetch current week number
-  const getCurrentWeek = () => {
-    const startOfYear = new Date(new Date().getFullYear(), 0, 1);
-    const days = Math.floor((new Date() - startOfYear) / (24 * 60 * 60 * 1000));
-    const week = Math.ceil((days + 1) / 7);
+  const getCurrentWeekOfMonth = () => {
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const days = today.getDate(); // Day of the month
+    const week = Math.ceil(days / 7); // Calculate the week number
     setCurrentWeek(week);
-    console.log("Week",week);
+    console.log("Current Week of Month:", week);
   };
 
-  getCurrentWeek();
+  getCurrentWeekOfMonth();
 }, []);
+
+
 
 useEffect(() => {
-  // Fetch weekly progress
-  const fetchWeeklyProgress = async () => {
-    try {
-      const userId = localStorage.getItem("userId");
-      // const response = await api.get(`${userId}/weeklyProgress/${currentWeek}`);
-      const response = await api.get(`${userId}/weeklyProgress/48`);
-      setWeeklyProgress(response.data.progress); // Set weekly progress state
-    } catch (error) {
-      message.error("Failed to fetch weekly progress.");
-    }
-  };
-
-  fetchWeeklyProgress();
-}, []);
+  if (currentWeek > 0) { // Only fetch if currentWeek is valid
+    const fetchWeeklyProgress = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        const response = await api.get(`${userId}/weeklyProgress/${currentWeek}`);
+        setWeeklyProgress(response.data.progress);
+      } catch (error) {
+        message.error("Failed to fetch weekly progress.");
+      }
+    };
+    fetchWeeklyProgress();
+  }
+}, [currentWeek]);
 
 useEffect(() => {
   // Fetch upcoming tasks from the API when the component mounts
@@ -641,7 +644,7 @@ useEffect(() => {
   };
 
   fetchUpcomingTasks();
-}, []);
+}, [currentWeek]);
  // Pastel Card Styles
  const pastelStyles = {
   white: { backgroundColor: "#fef8e4" }, // Light pastel yellow
