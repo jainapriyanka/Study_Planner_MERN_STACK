@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/Api'; // Axios instance
 import './LandingPage.css'; 
@@ -8,15 +8,36 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+   // Load email and rememberMe status from localStorage on component mount
+   useEffect(() => {
+    const storedEmail = localStorage.getItem('rememberMeEmail');
+    const storedRememberMe = localStorage.getItem('rememberMe') === 'true';
+    if (storedEmail && storedRememberMe) {
+      setEmail(storedEmail);
+      setRememberMe(storedRememberMe);
+    }
+  }, []);
+
+ const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await api.post('/auth/login', { email, password });
       localStorage.setItem('token', response.data.userData.token);
       localStorage.setItem('userName', response.data.userData.name);
       localStorage.setItem('userId', response.data.userData.id);
+
+      // Handle "Remember Me" logic
+      if (rememberMe) {
+        localStorage.setItem('rememberMeEmail', email);
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('rememberMeEmail');
+        localStorage.removeItem('rememberMe');
+      }
+
       setSuccess('Login successful! Redirecting to dashboard...');
       setError('');
       setTimeout(() => navigate('/dashboard'), 2000); // Redirect after 2 seconds
@@ -25,6 +46,11 @@ const Login = () => {
       setSuccess('');
     }
   };
+
+  const handleRememberMeToggle = () => {
+    setRememberMe(!rememberMe);
+  };
+
 
   return (
     <div className="login-container">
@@ -51,6 +77,15 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+            />
+          </div>
+           <div className="form-group" style={{ display: 'flex', alignItems: 'center' }}>
+            <label htmlFor="rememberMe">Remember Me</label>
+            <input
+              type="checkbox"
+              id="rememberMe"
+              checked={rememberMe}
+              onChange={handleRememberMeToggle}
             />
           </div>
           <button type="submit" className="btn btn-auth">Login</button>

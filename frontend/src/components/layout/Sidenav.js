@@ -215,11 +215,23 @@ function Sidenav({ color }) {
   ];
  
   const navigate =useNavigate()
-  const handleLogout=()=>{
-    localStorage.removeItem("token")
-    localStorage.removeItem("userName")
-    navigate("/login")
-  }
+  const handleLogout = () => {
+    const rememberMe = localStorage.getItem('rememberMe') === 'true';
+  
+    // Clear local storage/session storage based on Remember Me
+    if (!rememberMe) {
+      // Clear all user-related data if not remembered
+      localStorage.clear();
+    } else {
+      // Keep "rememberMe" flag but remove sensitive data
+      localStorage.removeItem('token');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userId');
+    }
+  
+    // Redirect to login page
+    navigate('/login');
+  };
 
   return (
     <>
