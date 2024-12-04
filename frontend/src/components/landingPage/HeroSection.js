@@ -16,10 +16,6 @@ const HeroSection = () => {
           Are you struggling to manage your study time? Our Study Planner is here to help you stay on track and boost your productivity.
           Create personalized study plans, track progress, set reminders, and achieve your academic goals with confidence.
         </p>
-        <div className="button-group">
-          <Button className="hero-btn">Read More</Button>
-          <Button className="hero-btn secondary-btn">Contact Us</Button>
-        </div>
       </div>
     </div>
   );
