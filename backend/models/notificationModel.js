@@ -4,20 +4,20 @@ const notificationSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
+      ref: "user", // Make sure this is the correct model reference (should be 'User' if that's your user model)
+      required: true,
+    },
+    title: {
+      type: String,
       required: true,
     },
     message: {
-      type: String,
+      type: String, 
       required: true,
     },
     isRead: {
       type: Boolean,
       default: false,
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
     },
   },
   { timestamps: true }

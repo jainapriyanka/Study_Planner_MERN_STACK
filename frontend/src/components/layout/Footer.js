@@ -12,7 +12,7 @@ function Footer() {
             © 2024, made with
             {<HeartFilled />} by
             <a href="#pablo" className="font-weight-bold" target="_blank">
-              TaskMaster
+            StudyMaster
             </a>
           </div>
         </Col>
@@ -25,7 +25,7 @@ function Footer() {
                   className="nav-link text-muted"
                   target="_blank"
                 >
-                  TaskMaster
+                  StudyMaster
                 </a>
               </li>
               <li className="nav-item">

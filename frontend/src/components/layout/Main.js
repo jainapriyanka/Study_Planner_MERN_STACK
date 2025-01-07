@@ -1,6 +1,6 @@
 
 
-import { useState, useEffect } from "react";
+import { useState, useEffect,useLayoutEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Layout, Drawer, Affix } from "antd";
 import Sidenav from "./Sidenav";
@@ -15,6 +15,24 @@ function Main({ children }) {
   const [sidenavColor, setSidenavColor] = useState("#1890ff");
   const [sidenavType, setSidenavType] = useState("transparent");
   const [fixed, setFixed] = useState(false);
+  
+ 
+  
+ // ResizeObserver fix for the layout
+ useLayoutEffect(() => {
+  const observerErrorHandler = () => {
+    // Force layout recalculation to fix ResizeObserver issues
+    const bodyStyle = document.body.style;
+    bodyStyle.display = "none";
+    bodyStyle.display = "block";
+  };
+
+  window.addEventListener("error", observerErrorHandler);
+  return () => {
+    window.removeEventListener("error", observerErrorHandler);
+  };
+}, []);
+
 
   const openDrawer = () => setVisible(!visible);
   const handleSidenavType = (type) => setSidenavType(type);
@@ -95,6 +113,8 @@ function Main({ children }) {
                 handleSidenavColor={handleSidenavColor}
                 handleSidenavType={handleSidenavType}
                 handleFixedNavbar={handleFixedNavbar}
+                // taskCount={taskCount}
+               
               />
             </AntHeader>
           </Affix>
@@ -107,6 +127,7 @@ function Main({ children }) {
               handleSidenavColor={handleSidenavColor}
               handleSidenavType={handleSidenavType}
               handleFixedNavbar={handleFixedNavbar}
+              // taskCount={taskCount}
             />
           </AntHeader>
         )}

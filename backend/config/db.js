@@ -13,7 +13,11 @@ mongoose.set("strictQuery", true);
 
 const connectDB = () => {
   mongoose
-    .connect(MONGO_URI)
+    .connect(MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      dbName: "Study_Planner",
+    })
     .then(() => {
       console.log("Successfully connected to MongoDB");
     })

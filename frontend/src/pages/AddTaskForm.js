@@ -2,8 +2,13 @@ import React from 'react';
 import { Modal, Form, Input, Button, DatePicker, notification } from 'antd';
 import api from '../services/Api'; // Import api.js
 
-const AddTaskForm = ({ visible, onClose, plan }) => {
+const AddTaskForm = ({ visible, onClose, plan,sendPushNotification }) => {
   const [form] = Form.useForm();
+
+   // Function to disable past dates
+   const disablePastDates = (current) => {
+    return current && current < new Date().setHours(0, 0, 0, 0);
+  };
 
   // Handle saving the task
   const handleSaveTask = async (values) => {
@@ -23,6 +28,14 @@ const AddTaskForm = ({ visible, onClose, plan }) => {
 
       if (!response.data) {
         throw new Error('Failed to create task');
+      }
+
+        // Push Notification
+      if (sendPushNotification) {
+        sendPushNotification({
+          title: 'New Task Added',
+          message: `The task "${taskData.title}" has been added successfully!`
+        });
       }
 
       notification.success({ message: 'Task created successfully!' });
@@ -45,7 +58,7 @@ const AddTaskForm = ({ visible, onClose, plan }) => {
           <Input />
         </Form.Item>
         <Form.Item label="Due Date" name="dueDate" rules={[{ required: true, message: 'Please select a due date!' }]}>
-          <DatePicker style={{ width: '100%' }} />
+          <DatePicker  disabledDate={disablePastDates} style={{ width: '100%' }} />
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit">
