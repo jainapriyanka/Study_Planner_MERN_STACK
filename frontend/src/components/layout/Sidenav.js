@@ -320,23 +320,11 @@ function Sidenav({ color }) {
             <span className="label">Notes</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="7">
-          <NavLink to="/time-table">
-            <span
-              className="icon"
-              style={{
-                background: page === "rtl" ? color : "",
-              }}
-            >
-              {timetable}
-            </span>
-            <span className="label">Time Table</span>
-          </NavLink>
-        </Menu.Item>
-        <Menu.Item className="menu-item-header" key="8">
+       
+        <Menu.Item className="menu-item-header" key="7">
           Account Pages
         </Menu.Item>
-        <Menu.Item key="9">
+        <Menu.Item key="8">
           <NavLink to="/profile">
             <span
               className="icon"
@@ -349,13 +337,13 @@ function Sidenav({ color }) {
             <span className="label">Profile</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="10" onClick={handleLogout}>
+        <Menu.Item key="9" onClick={handleLogout}>
           <NavLink to="/sign-in">
             <span className="icon">{logout}</span>
             <span className="label">Logout</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="11">
+        <Menu.Item key="10">
           <NavLink to="/settings">
             <span className="icon">{settings}</span>
             <span className="label">Settings</span>

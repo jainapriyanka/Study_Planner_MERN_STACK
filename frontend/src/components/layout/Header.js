@@ -9,6 +9,7 @@
     Button,
     Input,
     Drawer,
+    Avatar
     // Typography,
   } from "antd";
 
@@ -50,7 +51,7 @@
   //   </svg>,
   // ];
 
-  function Header({subName,onPress  }) {
+  function Header({subName,onPress,userProfilePic  }) {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [notificationCount, setNotificationCount] = useState(0);
       
@@ -92,6 +93,11 @@
             </div>
           </Col>
           <Col span={24} md={18} className="header-control">
+          <Avatar
+            size="large"
+            src={userProfilePic}
+            style={{ marginLeft: "16px", cursor: "pointer" }}
+          />
           <Badge count={notificationCount }> {/* Dynamically show count */}
               <Button
                 type="text"
@@ -111,6 +117,7 @@
         >
           <UserNotifications setNotificationCount={setNotificationCount}  />
         </Drawer>
+        
             <Button
               type="link"
               className="sidebar-toggler"
@@ -123,6 +130,7 @@
               placeholder="Type here..."
               prefix={<SearchOutlined />}
             />
+            
           </Col>
         </Row>
       </>

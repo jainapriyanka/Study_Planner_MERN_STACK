@@ -55,57 +55,152 @@ const axios =require('axios')
 //     res.status(500).json({ message: 'Server error', error });
 //   }
 // };
+// exports.registerUser = async (req, res) => {
+//   const { name, email, password, captchaToken } = req.body;
+//   // console.log("captcha token from req.body",captchaToken);
+
+//   // 1. Verify CAPTCHA token with Google reCAPTCHA service
+//   try {
+//     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+//     console.log("secret key",secretKey)
+//     // const response = await axios.post(
+//     //   `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${captchaToken}`,
+//     //   // null,
+//     //   // {
+//     //   //   params: {
+//     //   //     secret: secretKey,
+//     //   //     response: captchaToken,
+//     //   //   },
+//     //   // }
+//     // );
+//     const response = await axios.post(
+//       'https://www.google.com/recaptcha/api/siteverify',
+//       null,
+//       {
+//         params: {
+//           secret: secretKey,
+//           response: captchaToken,
+//         },
+//       }
+//     );
+//     console.log("reg data",response.data)
+//     // If CAPTCHA verification fails
+//     if (!response.data.success) {
+//       return res.status(400).json({ message: 'Captcha verification failed. Please try again.' });
+//     }
+
+//     // 2. Check if user exists
+//     const existingUser = await User.findOne({ email });
+//     if (existingUser) {
+//       return res.status(400).json({ message: 'User already exists' });
+//     }
+
+//     // 3. Password hash
+//     const hashedPassword = await bcrypt.hash(password, 10);
+//     const newUser = new User({
+//       name,
+//       email,
+//       password: hashedPassword,
+//     });
+
+//     // 4. Save the user to the database
+//     await newUser.save();
+
+//     // 5. Send Welcome Email
+//     const subject = "Welcome to Our Platform!";
+//     const text = `Hi ${name},\n\nThank you for registering on our platform. We're excited to have you on board!\n\nBest regards,\nTeam`;
+//     try {
+//       await sendEmail(email, subject, text);
+//       console.log("Welcome email sent successfully");
+//     } catch (emailError) {
+//       console.error("Error sending email:", emailError.message);
+//     }
+
+//     // 6. Respond with user details (without the password)
+//     res.status(201).json({
+//       _id: newUser.id,
+//       name: newUser.name,
+//       email: newUser.email,
+//       success: true,
+//       message: "User registered successfully",
+//     });
+
+//   } catch (error) {
+//     console.error('Error during registration:', error);
+//     res.status(500).json({ message: 'Server error', error });
+//   }
+// };
 exports.registerUser = async (req, res) => {
   const { name, email, password, captchaToken } = req.body;
-  console.log("captcha token from req.body",captchaToken);
 
-  // 1. Verify CAPTCHA token with Google reCAPTCHA service
+  // 1. Early validation check
+  if (!name || !email || !password || !captchaToken) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
   try {
     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-    const response = await axios.post(
-      `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${captchaToken}`,
-      // null,
-      // {
-      //   params: {
-      //     secret: secretKey,
-      //     response: captchaToken,
-      //   },
-      // }
-    );
+    console.log("Secret key exists:", !!secretKey);
 
-    // If CAPTCHA verification fails
-    if (!response.data.success) {
-      return res.status(400).json({ message: 'Captcha verification failed. Please try again.' });
+    // 2. Run CAPTCHA and database check simultaneously to save time
+    const [captchaResponse, existingUser] = await Promise.all([
+      axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
+        params: {
+          secret: secretKey,
+          response: captchaToken,
+        },
+      }),
+      User.findOne({ email })
+    ]);
+
+    console.log("CAPTCHA Response:", captchaResponse.data);
+    console.log("User Check Response:", existingUser ? 'User exists' : 'No existing user');
+
+    // 3. Check if CAPTCHA verification fails
+    if (!captchaResponse.data.success) {
+      const errorCodes = captchaResponse.data['error-codes'] || [];
+      console.log("CAPTCHA Error Codes:", errorCodes);
+
+      if (errorCodes.includes('timeout-or-duplicate')) {
+        return res.status(400).json({
+          message: 'CAPTCHA verification failed. The token may have expired or is a duplicate. Please refresh and try again.',
+          errorCode: 'timeout-or-duplicate'
+        });
+      }
+
+      return res.status(400).json({ 
+        message: 'CAPTCHA verification failed. Please try again.',
+        errorCodes
+      });
     }
 
-    // 2. Check if user exists
-    const existingUser = await User.findOne({ email });
+    // 4. Check if the user already exists
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // 3. Password hash
+    // 5. Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 6. Create a new user in the database
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
     });
 
-    // 4. Save the user to the database
     await newUser.save();
 
-    // 5. Send Welcome Email
+    // 7. Send Welcome Email (Non-blocking)
     const subject = "Welcome to Our Platform!";
     const text = `Hi ${name},\n\nThank you for registering on our platform. We're excited to have you on board!\n\nBest regards,\nTeam`;
-    try {
-      await sendEmail(email, subject, text);
+    sendEmail(email, subject, text).then(() => {
       console.log("Welcome email sent successfully");
-    } catch (emailError) {
+    }).catch(emailError => {
       console.error("Error sending email:", emailError.message);
-    }
+    });
 
-    // 6. Respond with user details (without the password)
+    // 8. Respond to the client (without blocking on email)
     res.status(201).json({
       _id: newUser.id,
       name: newUser.name,
@@ -119,6 +214,7 @@ exports.registerUser = async (req, res) => {
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
 
 
 

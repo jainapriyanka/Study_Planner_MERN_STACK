@@ -1,48 +1,56 @@
-
-import { useState } from "react";
-
-import {
-  Row,
-  Col,
-  Card,
-  Button,
-  List,
-  Descriptions,
-  Avatar,
-  Radio,
-  Switch,
-  Upload,
-  message,
-} from "antd";
-
-import {
-  FacebookOutlined,
-  TwitterOutlined,
-  InstagramOutlined,
-  VerticalAlignTopOutlined,
-} from "@ant-design/icons";
+import { useState, useEffect } from "react";
+import { Row, Col, Card, Button, Avatar, Form, Input, Upload, message } from "antd";
+import { EditOutlined, SaveOutlined, CloseOutlined } from "@ant-design/icons";
+import api from "../services/Api.js"; // Assuming this is where your API methods are defined
 
 import BgProfile from "../assets/images/bg-profile.jpg";
-import profilavatar from "../assets/images/face-1.jpg";
-import convesionImg from "../assets/images/face-3.jpg";
-import convesionImg2 from "../assets/images/face-4.jpg";
-import convesionImg3 from "../assets/images/face-5.jpeg";
-import convesionImg4 from "../assets/images/face-6.jpeg";
-import convesionImg5 from "../assets/images/face-2.jpg";
-// import project1 from "../assets/images/home-decor-1.jpeg";
-// import project2 from "../assets/images/home-decor-2.jpeg";
-// import project3 from "../assets/images/home-decor-3.jpeg";
 
 function Profile() {
-  const [imageURL, setImageURL] = useState(false);
-  const [, setLoading] = useState(false);
+  const [imageURL, setImageURL] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [editing, setEditing] = useState(false); // Manage edit state
+  const [form] = Form.useForm(); // For handling form data
 
+  // Get userId from local storage
+  const userId = localStorage.getItem("userId");
+
+  // Fetch user data when the component loads
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // Ensure userId is available
+        if (!userId) {
+          message.error("User not found!");
+          return;
+        }
+
+        const response = await api.get(`/auth/user/getUserProfile/${userId}`); 
+        const user = response.data.data; // Extract the user data from the API response
+        console.log("User Profile", user);
+
+        // Set the profile picture URL (Cloudinary URL)
+        const profilePicURL = user.profilePicture;  // Cloudinary URL directly from response
+        console.log("Profile Pic", profilePicURL);
+  
+        setUserData(user); // Set the user data
+        setImageURL(profilePicURL); // Set the profile picture URL
+        form.setFieldsValue({ ...user, profilePicture: [] }); // Initialize form fields, make sure profilePicture is an empty array initially
+      } catch (error) {
+        message.error("Failed to fetch user data");
+      }
+    };
+
+    fetchUserData();
+  }, [userId, form]);
+
+  // Convert image to Base64 for preview
   const getBase64 = (img, callback) => {
     const reader = new FileReader();
     reader.addEventListener("load", () => callback(reader.result));
     reader.readAsDataURL(img);
   };
 
+  // Validate file before upload
   const beforeUpload = (file) => {
     const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
     if (!isJpgOrPng) {
@@ -50,124 +58,93 @@ function Profile() {
     }
     const isLt2M = file.size / 1024 / 1024 < 2;
     if (!isLt2M) {
-      message.error("Image must smaller than 2MB!");
+      message.error("Image must be smaller than 2MB!");
     }
     return isJpgOrPng && isLt2M;
   };
 
-  const handleChange = (info) => {
-    if (info.file.status === "uploading") {
-      setLoading(false);
-      return;
+// Handle the profile picture change
+const handleProfilePictureChange = (event) => {
+  const file = event.target.files[0]; // assuming the file is being passed here
+
+  if (!file) {
+    console.error("No file selected");
+    return;
+  }
+
+  // No need to call an API here, just update the state if you want to preview the image
+  getBase64(file, (base64Image) => {
+    setImageURL(base64Image); // Set the image URL to the Base64 image
+  });
+};
+
+
+
+  // Save changes to the profile
+  const handleSave = async (values) => {
+    try {
+      // Create FormData to send the image and other fields
+      const formData = new FormData();
+      formData.append("email", values.email);
+      if (values.profilePicture && values.profilePicture[0]) {
+        formData.append("profilePicture", values.profilePicture[0].originFileObj);
+      }
+       // Log the form data (for debugging purposes)
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
     }
-    if (info.file.status === "done") {
-      getBase64(info.file.originFileObj, (imageUrl) => {
-        setLoading(false);
-        setImageURL(false);
+
+      // Send the data to the backend to update the profile
+      await api.post(`/auth/user/uploadProfilePicture/${userId}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data", // Specify the content type for file upload
+        },
       });
+
+      message.success("Profile updated successfully");
+      setEditing(false); // Turn off edit mode
+    } catch (error) {
+      if (error.response && error.response.data.message) {
+        message.error(error.response.data.message); // Show the backend error
+      } else {
+        message.error("Failed to update profile");
+      }
     }
   };
 
-  const pencil = [
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      key={0}
-    >
-      <path
-        d="M13.5858 3.58579C14.3668 2.80474 15.6332 2.80474 16.4142 3.58579C17.1953 4.36683 17.1953 5.63316 16.4142 6.41421L15.6213 7.20711L12.7929 4.37868L13.5858 3.58579Z"
-        className="fill-gray-7"
-      ></path>
-      <path
-        d="M11.3787 5.79289L3 14.1716V17H5.82842L14.2071 8.62132L11.3787 5.79289Z"
-        className="fill-gray-7"
-      ></path>
-    </svg>,
-  ];
+  // Enable edit mode
+  const handleEdit = () => {
+    setEditing(true);
+  };
 
-  const uploadButton = (
-    <div className="ant-upload-text font-semibold text-dark">
-      {<VerticalAlignTopOutlined style={{ width: 20, color: "#000" }} />}
-      <div>Upload New Project</div>
-    </div>
-  );
-
-  const data = [
-    {
-      title: "Sophie B.",
-      avatar: convesionImg,
-      description: "Hi! I need more information…",
-    },
-    {
-      title: "Anne Marie",
-      avatar: convesionImg2,
-      description: "Awesome work, can you…",
-    },
-    {
-      title: "Ivan",
-      avatar: convesionImg3,
-      description: "About files I can…",
-    },
-    {
-      title: "Peterson",
-      avatar: convesionImg4,
-      description: "Have a great afternoon…",
-    },
-    {
-      title: "Nick Daniel",
-      avatar: convesionImg5,
-      description: "Hi! I need more information…",
-    },
-  ];
-
-  const project = [
-    {
-      // img: project1,
-      titlesub: "Project #1",
-      title: "Modern",
-      disciption:
-        "As Uber works through a huge amount of internal management turmoil.",
-    },
-    {
-      // img: project2,
-      titlesub: "Project #2",
-      title: "Scandinavian",
-      disciption:
-        "Music is something that every person has his or her own specific opinion about.",
-    },
-    {
-      // img: project3,
-      titlesub: "Project #3",
-      title: "Minimalist",
-      disciption:
-        "Different people have different taste, and various types of music, Zimbali Resort",
-    },
-  ];
+  const handleCancel = () => {
+    form.setFieldsValue({ ...userData, profilePicture: [] }); // Reset the form values and empty the file list
+    setImageURL(userData.profilePicture); // Reset the profile picture
+    setEditing(false); // Exit edit mode
+  };
 
   return (
-    <>
+    <div>
       <div
         className="profile-nav-bg"
-        style={{ backgroundImage: "url(" + BgProfile + ")" }}
+        style={{ backgroundImage: `url(${BgProfile})` }}
       ></div>
-
       <Card
         className="card-profile-head"
         bodyStyle={{ display: "none" }}
         title={
           <Row justify="space-between" align="middle" gutter={[24, 0]}>
             <Col span={24} md={12} className="col-info">
-              <Avatar.Group>
-                <Avatar size={74} shape="square" src={profilavatar} />
-
-                <div className="avatar-info">
-                  <h4 className="font-semibold m-0">Sarah Jacob</h4>
-                  <p>CEO / Co-Founder</p>
-                </div>
-              </Avatar.Group>
+            <Avatar
+                size={74}
+                shape="square"
+                src={imageURL || 'https://www.example.com/default-avatar.jpg'} // Use Cloudinary URL or fallback image
+                style={{ marginBottom: "16px" }}
+              />
+              <div className="avatar-info">
+                <h4 className="font-semibold m-0">{userData?.name || "Loading..."}</h4>
+                <p>{userData?.email || "Loading..."}</p>
+              </div>
             </Col>
             <Col
               span={24}
@@ -178,187 +155,77 @@ function Profile() {
                 justifyContent: "flex-end",
               }}
             >
-              <Radio.Group defaultValue="a">
-                <Radio.Button value="a">OVERVIEW</Radio.Button>
-                <Radio.Button value="b">TEAMS</Radio.Button>
-                <Radio.Button value="c">PROJECTS</Radio.Button>
-              </Radio.Group>
+              <Button
+                icon={<EditOutlined />}
+                type="primary"
+                onClick={handleEdit}
+                disabled={editing}
+              >
+                Edit
+              </Button>
             </Col>
           </Row>
         }
       ></Card>
 
-      <Row gutter={[24, 0]}>
-        <Col span={24} md={8} className="mb-24 ">
-          <Card
-            bordered={false}
-            className="header-solid h-full"
-            title={<h6 className="font-semibold m-0">Platform Settings</h6>}
+      {editing && (
+        <Card title="Edit Profile">
+          <Form
+            form={form}
+            onFinish={handleSave}
+            initialValues={userData}
+            encType="multipart/form-data"
           >
-            <ul className="list settings-list">
-              <li>
-                <h6 className="list-header text-sm text-muted">ACCOUNT</h6>
-              </li>
-              <li>
-                <Switch defaultChecked />
-
-                <span>Email me when someone follows me</span>
-              </li>
-              <li>
-                <Switch />
-                <span>Email me when someone answers me</span>
-              </li>
-              <li>
-                <Switch defaultChecked />
-                <span>Email me when someone mentions me</span>
-              </li>
-              <li>
-                <h6 className="list-header text-sm text-muted m-0">
-                  APPLICATION
-                </h6>
-              </li>
-              <li>
-                <Switch defaultChecked />
-                <span>New launches and projects</span>
-              </li>
-              <li>
-                <Switch defaultChecked />
-                <span>Monthly product updates</span>
-              </li>
-              <li>
-                <Switch defaultChecked />
-                <span>Subscribe to newsletter</span>
-              </li>
-            </ul>
-          </Card>
-        </Col>
-        <Col span={24} md={8} className="mb-24">
-          <Card
-            bordered={false}
-            title={<h6 className="font-semibold m-0">Profile Information</h6>}
-            className="header-solid h-full card-profile-information"
-            extra={<Button type="link">{pencil}</Button>}
-            bodyStyle={{ paddingTop: 0, paddingBottom: 16 }}
-          >
-            <p className="text-dark">
-              {" "}
-              Hi, I’m Alec Thompson, Decisions: If you can’t decide, the answer
-              is no. If two equally difficult paths, choose the one more painful
-              in the short term (pain avoidance is creating an illusion of
-              equality).{" "}
-            </p>
-            <hr className="my-25" />
-            <Descriptions title="Oliver Liam">
-              <Descriptions.Item label="Full Name" span={3}>
-                Sarah Emily Jacob
-              </Descriptions.Item>
-              <Descriptions.Item label="Mobile" span={3}>
-                (44) 123 1234 123
-              </Descriptions.Item>
-              <Descriptions.Item label="Email" span={3}>
-                sarahjacob@mail.com
-              </Descriptions.Item>
-              <Descriptions.Item label="Location" span={3}>
-                USA
-              </Descriptions.Item>
-              <Descriptions.Item label="Social" span={3}>
-                <a href="#pablo" className="mx-5 px-5">
-                  {<TwitterOutlined />}
-                </a>
-                <a href="#pablo" className="mx-5 px-5">
-                  {<FacebookOutlined style={{ color: "#344e86" }} />}
-                </a>
-                <a href="#pablo" className="mx-5 px-5">
-                  {<InstagramOutlined style={{ color: "#e1306c" }} />}
-                </a>
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        </Col>
-        <Col span={24} md={8} className="mb-24">
-          <Card
-            bordered={false}
-            title={<h6 className="font-semibold m-0">Conversations</h6>}
-            className="header-solid h-full"
-            bodyStyle={{ paddingTop: 0, paddingBottom: 16 }}
-          >
-            <List
-              itemLayout="horizontal"
-              dataSource={data}
-              split={false}
-              className="conversations-list"
-              renderItem={(item) => (
-                <List.Item actions={[<Button type="link">REPLY</Button>]}>
-                  <List.Item.Meta
-                    avatar={
-                      <Avatar shape="square" size={48} src={item.avatar} />
-                    }
-                    title={item.title}
-                    description={item.description}
-                  />
-                </List.Item>
-              )}
-            />
-          </Card>
-        </Col>
-      </Row>
-      <Card
-        bordered={false}
-        className="header-solid mb-24"
-        title={
-          <>
-            <h6 className="font-semibold">Projects</h6>
-            <p>Architects design houses</p>
-          </>
-        }
-      >
-        <Row gutter={[24, 24]}>
-          {project.map((p, index) => (
-            <Col span={24} md={12} xl={6} key={index}>
-              <Card
-                bordered={false}
-                className="card-project"
-                cover={<img alt="example" src={p.img} />}
-              >
-                <div className="card-tag">{p.titlesub}</div>
-                <h5>{p.titile}</h5>
-                <p>{p.disciption}</p>
-                <Row gutter={[6, 0]} className="card-footer">
-                  <Col span={12}>
-                    <Button type="button">VIEW PROJECT</Button>
-                  </Col>
-                  <Col span={12} className="text-right">
-                    <Avatar.Group className="avatar-chips">
-                      <Avatar size="small" src={profilavatar} />
-                      <Avatar size="small" src={convesionImg} />
-                      <Avatar size="small" src={convesionImg2} />
-                      <Avatar size="small" src={convesionImg3} />
-                    </Avatar.Group>
-                  </Col>
-                </Row>
-              </Card>
-            </Col>
-          ))}
-          <Col span={24} md={12} xl={6}>
-            <Upload
-              name="avatar"
-              listType="picture-card"
-              className="avatar-uploader projects-uploader"
-              showUploadList={false}
-              action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
+            <Form.Item name="email" label="Email">
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="profilePicture"
+              label="Profile Picture"
+              valuePropName="fileList"
+              getValueFromEvent={(e) => e && e.fileList ? e.fileList : []}
               beforeUpload={beforeUpload}
-              onChange={handleChange}
+              onChange={handleProfilePictureChange}
             >
-              {imageURL ? (
-                <img src={imageURL} alt="avatar" style={{ width: "100%" }} />
-              ) : (
-                uploadButton
-              )}
-            </Upload>
-          </Col>
-        </Row>
-      </Card>
-    </>
+            <Upload
+                name="profilePicture"
+                listType="picture-card"
+                maxCount={1}
+                showUploadList={false}
+              >
+                {imageURL ? (
+                  <img src={imageURL} alt="Profile" style={{ width: "100%" }} />
+                ) : (
+                  <div>Upload</div>
+                )}
+              </Upload>
+            </Form.Item>
+            <Form.Item>
+              <Row justify="space-between">
+                <Col>
+                  <Button
+                    type="primary"
+                    icon={<SaveOutlined />}
+                    htmlType="submit"
+                  >
+                    Save Changes
+                  </Button>
+                </Col>
+                <Col>
+                  <Button
+                    type="default"
+                    icon={<CloseOutlined />}
+                    onClick={handleCancel}
+                  >
+                    Cancel
+                  </Button>
+                </Col>
+              </Row>
+            </Form.Item>
+          </Form>
+        </Card>
+      )}
+    </div>
   );
 }
 

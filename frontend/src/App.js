@@ -23,10 +23,9 @@ import Login from "./components/landingPage/Login"
 import Register from "./components/landingPage/Register"
 import ForgotPassword from "./components/landingPage/ForgotPassword"
 import TaskList from "./pages/TaskList";
-
-
-
-
+import FAQ from "./components/landingPage/FAQ";
+import ContactUs from "./components/landingPage/ContactUs";
+import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
   useEffect(() => {
@@ -47,6 +46,8 @@ function App() {
           <Route path="/login" element={<Layout><Login /></Layout>} />
           <Route path="/register" element={<Layout><Register /></Layout>} />
           <Route path="/forgot-pass" element={<Layout><ForgotPassword /></Layout>} />
+          <Route path="/faq" element={<Layout><FAQ /></Layout>} />
+          <Route path="/contact" element={<Layout><ContactUs /></Layout>} />
          
               
                 
@@ -56,11 +57,10 @@ function App() {
                   <Route path="/tasklist/:planId" element={<Main><TaskList /></Main>} />
                   <Route path="/notes" element={<Main><Rtl /></Main>} />
                   <Route path="/progress-tracker" element={<Main><ProgressTracker /></Main>} />
-                  <Route path="/time-table" element={<Main><Tables /></Main>} />
                   <Route path="/profile" element={<Main><Profile /></Main>} />
                   <Route path="/notifications" element={<Main><UserNotifications /></Main>} />
                   {/* Redirect all unknown routes to /dashboard */}
-                  <Route path="*" element={<Navigate to="/dashboard" />} />
+                  <Route path="*" element={<NotFoundPage/>} />
                 
              
             
