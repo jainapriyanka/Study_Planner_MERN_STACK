@@ -27,6 +27,10 @@ import FAQ from "./components/landingPage/FAQ";
 import ContactUs from "./components/landingPage/ContactUs";
 import NotFoundPage from "./pages/NotFoundPage";
 
+//priyanka's imports
+import Dashboard from "./components_priyanka/dashboard";
+import CreateTask from "./components_priyanka/create_task";
+
 function App() {
   useEffect(() => {
     // Subscribe the user to push notifications
@@ -61,7 +65,8 @@ function App() {
                   <Route path="/notifications" element={<Main><UserNotifications /></Main>} />
                   {/* Redirect all unknown routes to /dashboard */}
                   <Route path="*" element={<NotFoundPage/>} />
-                
+                  <Route path="/priyanka/dashboard" element={<Main><Dashboard /></Main>} />
+                  <Route path="/assignments" element={<Main><CreateTask /></Main>} />
              
             
          

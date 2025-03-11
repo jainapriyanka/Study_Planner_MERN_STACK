@@ -5,11 +5,11 @@ require('dotenv').config();
 
 
 // Setting up VAPID keys
-const vapidKeys = webPush.generateVAPIDKeys();
+// const vapidKeys = webPush.generateVAPIDKeys();
 webPush.setVapidDetails(
  `mailto:${process.env.EMAIL_USER}`,  // Replace with your email address
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
+ process.env.VAPID_PUBLIC_KEY,
+ process.env.VAPID_PRIVATE_KEY
 );
 
 // Function to send a push notification
